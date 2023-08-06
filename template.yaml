@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  sam-local-authorizer-example
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Auth:
+        AddDefaultAuthorizerToCorsPreflight: false
+        ResourcePolicy:
+          CustomStatements: [
+              {
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "execute-api:Invoke",
+                "Resource": "execute-api:/*/OPTIONS/*",
+              },
+            ]
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionPayloadType: TOKEN
+            FunctionArn: !GetAtt Authorizer.Arn
+            Identity:
+              Header: Authorization
+              ReauthorizeEvery: 300
+  # Auth Lambda
+  Authorizer:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        SourceMap: false
+        External:
+          - node_modules
+        EntryPoints:
+          - src/app.ts
+    Properties:
+      Runtime: nodejs18.x
+      CodeUri: ./
+      Handler: app.AuthorizerHandler
+      Timeout: 5
+  # Protect API Lambda
+  Ping:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        SourceMap: false
+        External:
+          - node_modules
+        EntryPoints:
+          - src/app.ts
+    Properties:
+      Runtime: nodejs18.x
+      CodeUri: ./
+      Handler: app.PingHandler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Auth:
+              ApiKeyRequired: true
+            RestApiId:
+              Ref: ApiGateway
+            Path: /ping
+            Method: get
