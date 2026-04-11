@@ -10,7 +10,7 @@ Here is an article that walks you through the REST API and AWS SAM configuration
 
 Check it!
 
-[AWS Serverless - Using SAM with custom authoriser locally](https://www.willischou.com/aws-serverless-using-sam-to-develop-api-with-frontend-locally/)
+[AWS Serverless - Using SAM with custom authoriser locally](https://www.willischou.com/aws-serverless-using-sam-with-custom-authoriser-locally/)
 
 ## Contribution
 
